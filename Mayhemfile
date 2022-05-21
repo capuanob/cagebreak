@@ -1,0 +1,12 @@
+image: ghcr.io/capuanob/cagebreak:latest
+project: cagebreak
+target: fuzz-parse
+tests:
+  - file://fuzz/corpus
+
+cmds:
+  - cmd: ./build/fuzz/fuzz-parse -max_len=50000 -close_fd_mask=3 -detect_leaks=0
+    libfuzzer: true
+    env:
+      XDG_RUNTIME_DIR: /tmp/
+      WLR_BACKENDS: headless
