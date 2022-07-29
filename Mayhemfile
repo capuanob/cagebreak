@@ -4,7 +4,7 @@ testsuite:
   - file://fuzz/corpus
 
 cmds:
-  - cmd: ./fuzz-parse -detect_leaks=0
+  - cmd: /fuzz-parse -detect_leaks=0
     libfuzzer: true
     env:
       XDG_RUNTIME_DIR: /tmp/

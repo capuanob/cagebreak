@@ -1,13 +1,7 @@
 # Build Stage
 FROM --platform=linux/amd64 ubuntu:22.04 as builder
 
-ARG USERNAME=fuzzer
-ARG USER_UID=1000
-ARG USER_GID=$USER_UID
 
-## Refuses to run as root, create another user
-RUN groupadd --gid $USER_GID $USERNAME \
-       && useradd --uid $USER_UID --gid $USER_GID -m $USERNAME
 
 ## Install build dependencies.
 RUN apt-get update && \
@@ -17,9 +11,6 @@ RUN apt-get update && \
 ## Add source code to the build stage.
 WORKDIR /home/fuzzer/
 ADD . /cagebreak
-RUN chown -R $USERNAME /cagebreak
-
-USER $USERNAME
 
 ENV XDG_RUNTIME_DIR=/tmp/
 ENV WLR_BACKENDS=headless
@@ -35,6 +26,10 @@ RUN cp examples/config build/fuzz_corpus/
 
 ## Package Stage
 FROM --platform=linux/amd64 ubuntu:22.04 as packager
+ARG USERNAME=fuzzer
+ARG USER_UID=1000
+ARG USER_GID=$USER_UID
+
 RUN apt-get update && \
 	DEBIAN_FRONTEND=noninteractive apt-get install -y libwayland-server0 libwayland-client0 libwlroots10 libxkbcommon0 libinput10 libevdev2 libudev1 libpixman-1-0 libpango-1.0-0 libglib2.0-0 libcairo2 libpangocairo-1.0-0 
 ENV XDG_RUNTIME_DIR=/tmp/
@@ -43,3 +38,8 @@ ENV ASAN_OPTIONS=detect_leaks=0
 
 COPY --from=builder /cagebreak/build/fuzz/fuzz-parse /fuzz-parse
 COPY --from=builder /cagebreak/build/fuzz/libexecl_override.so /usr/lib
+
+## Refuses to run as root, create another user
+RUN groupadd --gid $USER_GID $USERNAME \
+       && useradd --uid $USER_UID --gid $USER_GID -m $USERNAME
+USER $USERNAME
